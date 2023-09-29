@@ -81,7 +81,6 @@ def handle_request():
     endpoint = "/residual_wood"
     headers = {"Content-Type": "application/json"}
 
-    json_body = json.dumps(payload)
     for item in inserted_data:
         if item[0] in ["length", "width", "height", "weight", "density"]:
             payload[item[0]] = float(item[1])
@@ -89,8 +88,10 @@ def handle_request():
             payload[item[0]] = item[1]
 
     payload["timestamp"] = datetime.strftime(datetime.now(), "%d-%m-%Y %H:%M:%S")
+    json_body = json.dumps(payload)
+
     response = requests.post(URL + endpoint, data=json_body, timeout=5, headers=headers)
-    print(response.json())
+    print(">>>>>>", response.json())
     return response.json()
 
 
@@ -180,10 +181,7 @@ def main(page: Page):
 
         if error_status is False:
             resp = handle_request()
-            if resp['code'] != 201:
-                BannerMsg(page, resp['status'] + f" - status code: {resp['code']}", 'warning', e)
-            else:
-                BannerMsg(page, "Successfully saved to DB", 'message', e)
+            BannerMsg(page, "Successfully saved to DB", 'message', e)
 
     gui = Container(
         content=Column(controls=[
