@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+import json
 
 import flet
 from flet import TextField, Text, Column, Row, Checkbox
@@ -7,6 +8,11 @@ from flet import Page, Container, Divider, FilledTonalButton
 from flet_core import Card, FilledButton, TextButton, Banner, colors, Icon, icons
 import webbrowser
 import requests
+
+URL = "https://robotlab-residualwood.onrender.com/"
+KEYS = ["length", "width", "height", "weight", "density", "wood_species", "label", "color", "paint", "type",
+        "project_type", "is_fire_treated", "is_straight", "is_planed", "image", "source", "info"]
+values = []
 
 
 class BannerMsg:
@@ -69,15 +75,13 @@ class BannerMsg:
         self.page.update()
 
 
-values = []
-keys = ["length", "width", "height", "weight", "density", "wood_species", "label", "color", "paint", "type",
-        "project_type", "is_fire_treated", "is_straight", "is_planed", "image", "source", "info"]
-
-
 def handle_request():
-    inserted_data = list(zip(keys, values))
+    inserted_data = list(zip(KEYS, values))
     payload = {}
+    endpoint = "/residual_wood"
+    headers = {"Content-Type": "application/json"}
 
+    json_body = json.dumps(payload)
     for item in inserted_data:
         if item[0] in ["length", "width", "height", "weight", "density"]:
             payload[item[0]] = float(item[1])
@@ -85,7 +89,9 @@ def handle_request():
             payload[item[0]] = item[1]
 
     payload["timestamp"] = datetime.strftime(datetime.now(), "%d-%m-%Y %H:%M:%S")
-    print(payload)
+    response = requests.post(URL + endpoint, data=json_body, timeout=5, headers=headers)
+    print(response.json())
+    return response.json()
 
 
 def main(page: Page):
@@ -173,18 +179,25 @@ def main(page: Page):
             values.append(f.value)
 
         if error_status is False:
-            handle_request()
-            BannerMsg(page, "Successfully saved to DB", 'message', e)
+            resp = handle_request()
+            if resp['code'] != 201:
+                BannerMsg(page, resp['status'] + f" - status code: {resp['code']}", 'warning', e)
+            else:
+                BannerMsg(page, "Successfully saved to DB", 'message', e)
 
     gui = Container(
         content=Column(controls=[
             Divider(height=25, color="#FFFFFF"),
             Card(content=Container(padding=10, content=Column(controls=[
                 Text("ROBOT LAB WOOD DATABASE", size=20, weight=flet.FontWeight.W_500),
-                Text("URL: https://https://robotlab-residualwood.onrender.com/residual_wood", size=14,
-                     weight=flet.FontWeight.W_100, selectable=True),
+                Text("Contact: j.jooshesh@hva.nl", size=14,
+                     weight=flet.FontWeight.W_200, selectable=True),
+                Text("https://https://robotlab-residualwood.onrender.com/residual_wood", size=14,
+                     weight=flet.FontWeight.W_200, selectable=True),
+
                 Row(controls=[FilledTonalButton(text="API Documentation", on_click=go_to_api_docs, style=btn_style_1),
                               FilledTonalButton(text="Repository", on_click=go_to_github_page, style=btn_style_2)]),
+
             ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, wrap=True))),
 
             Divider(height=25, color="#FFFFFF"),
