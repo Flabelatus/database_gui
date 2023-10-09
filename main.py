@@ -93,7 +93,7 @@ def handle_post_request():
     payload["timestamp"] = datetime.strftime(datetime.now(), "%d-%m-%Y %H:%M:%S")
     json_body = json.dumps(payload)
 
-    response = requests.post(URL_DEV + endpoint, data=json_body, timeout=10, headers=headers)
+    response = requests.post(URL + endpoint, data=json_body, timeout=10, headers=headers)
     # print(">>>>>>", json_body)
     return response.json()
 
@@ -105,7 +105,7 @@ def handle_delete_request():
             payload["wood_id"] = p
 
     json_body = json.dumps(payload)
-    response = requests.delete(URL, data=json_body, headers={"Content-Type": "application/json"})
+    response = requests.delete(URL + "residual_wood", data=json_body, headers={"Content-Type": "application/json"})
     return response.json()
 
 
@@ -293,11 +293,11 @@ def main(page: Page):
             controls=[
                 Divider(height=25, color="white"),
                 Card(color="#4336f5", content=Container(padding=10, content=Column(controls=[
-                    Image(src="RL LOGO WHITE .png", fit=flet.ImageFit.CONTAIN, width=200),
+                    Image(src="assets/RL LOGO WHITE .png", fit=flet.ImageFit.CONTAIN, width=200),
                     Text("DATA ENTRY GUI", size=22, weight=flet.FontWeight.W_900, color="white"),
                     Text("contact: j.jooshesh@hva.nl", size=14,
                          weight=flet.FontWeight.W_200, selectable=True, color="white"),
-                    Text("https://https://robotlab-residualwood.onrender.com/residual_wood", size=14,
+                    Text("https://robotlab-residualwood.onrender.com/residual_wood", size=14,
                          weight=flet.FontWeight.W_200, selectable=True, color="white"),
 
                     Row(controls=[ElevatedButton(text="API Documentation", on_click=go_to_api_docs, bgcolor="white",
