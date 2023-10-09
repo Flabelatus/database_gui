@@ -4,13 +4,14 @@ import json
 
 import flet
 from flet import TextField, Text, Column, Row, Checkbox
-from flet import Page, Container, Divider, FilledTonalButton
-from flet_core import Card, FilledButton, TextButton, Banner, colors, Icon, icons
+from flet import Page, Container, Divider, Image, ElevatedButton
+from flet_core import Card, TextButton, Banner, colors, Icon, icons, ScrollMode
 import webbrowser
 import requests
 
 URL = "https://robotlab-residualwood.onrender.com/"
-KEYS = ["length", "width", "height", "weight", "density", "wood_species", "label", "color", "paint", "type",
+KEYS = ["length", "width", "height", "weight", "density", "wood_species", "label", "color", "storage_location",
+        "wood_id", "paint", "type",
         "project_type", "is_fire_treated", "is_straight", "is_planed", "image", "source", "info"]
 values = []
 
@@ -91,7 +92,7 @@ def handle_request():
     json_body = json.dumps(payload)
 
     response = requests.post(URL + endpoint, data=json_body, timeout=5, headers=headers)
-    print(">>>>>>", response.json())
+    # print(">>>>>>", json_body)
     return response.json()
 
 
@@ -101,11 +102,8 @@ def main(page: Page):
     page.description = "A simple tool to add data of waste wood into the database"
     page.window_width = 520
     page.window_height = 850
-    page.scroll = "always"
-
-    btn_style_1 = flet.ButtonStyle(bgcolor=flet.colors.BLUE)
-    btn_style_2 = flet.ButtonStyle(bgcolor=flet.colors.GREY)
-    btn_style_3 = flet.ButtonStyle(bgcolor=flet.colors.GREEN)
+    page.theme = flet.Theme(visual_density=flet.ThemeVisualDensity.COMFORTABLE, use_material3=True,
+                            color_scheme_seed="#4336f5")
 
     def go_to_api_docs(e):
         webbrowser.open("https://robotlab-residualwood.onrender.com/swagger-ui")
@@ -113,22 +111,35 @@ def main(page: Page):
     def go_to_github_page(e):
         webbrowser.open("https://github.com/Flabelatus/CircularWood_4.0_WP1")
 
-    length_text_field = TextField(label="Length *", tooltip="Length of the wood in mm", width=200, height=40)
-    width_text_field = TextField(label="Width *", tooltip="Width of the wood in mm", width=200, height=40)
-    height_text_field = TextField(label="Height *", tooltip="Height of the wood in mm", width=200, height=40)
+    length_text_field = TextField(label="Length *", tooltip="Length of the wood in mm", width=200, height=40,
+                                  border_color="#4336f5", color="#4336f5")
+    width_text_field = TextField(label="Width *", tooltip="Width of the wood in mm", width=200, height=40,
+                                 border_color="#4336f5", color="#4336f5")
+    height_text_field = TextField(label="Height *", tooltip="Height of the wood in mm", width=200, height=40,
+                                  border_color="#4336f5", color="#4336f5")
 
-    weight_text_field = TextField(label="Weight *", tooltip="Weight of the wood in kg", width=200, height=40)
-    density_text_field = TextField(label="Density *", tooltip="Density of the wood mm3/kg", width=200, height=40)
+    weight_text_field = TextField(label="Weight *", tooltip="Weight of the wood in kg", width=200, height=40,
+                                  border_color="#4336f5", color="#4336f5")
+    density_text_field = TextField(label="Density *", tooltip="Density of the wood mm3/kg", width=200, height=40,
+                                   border_color="#4336f5", color="#4336f5")
     wood_species_field = TextField(label="Species", tooltip="Species and process of the wood e.g. Red Oak FSC ",
-                                   width=200, height=40)
-    label_field = TextField(label="Label", tooltip="Label of the material from specific project", width=200, height=40)
+                                   width=200, height=40, border_color="#4336f5", color="#4336f5")
+    label_field = TextField(label="Label", tooltip="Label of the material from specific project", width=200, height=40,
+                            border_color="#4336f5", color="#4336f5")
     color_text_field = TextField(label="Color *", tooltip="Color of the wood in (RGB) e.g. '120, 130, 90'", width=200,
-                                 height=40)
+                                 height=40, border_color="#4336f5", color="#4336f5")
+    storage_location_text_field = TextField(label="Storage Location",
+                                            tooltip="A reference to where the wood is stored in the physical storage",
+                                            width=200, height=40, border_color="#4336f5", color="#4336f5")
+    wood_id_text_field = TextField(label="Wood ID", tooltip="ID of the wood e.g. in the 7 digits format of '00000001'",
+                                   width=200, height=40, border_color="#4336f5", color="#4336f5")
     paint_text_field = TextField(label="RAL number", width=120, height=40, tooltip="The RAL number of the"
-                                                                                   " wood if it is painted")
-    type_text_field = TextField(label="Wood type", width=120, height=40, tooltip="Wood type e.g. hardwood or softwood")
+                                                                                   " wood if it is painted",
+                                 border_color="#4336f5", color="#4336f5")
+    type_text_field = TextField(label="Wood type", width=120, height=40, tooltip="Wood type e.g. hardwood or softwood",
+                                border_color="#4336f5", color="#4336f5")
 
-    project_type = TextField(label="Project type", width=120, height=40,
+    project_type = TextField(label="Project type", width=120, height=40, border_color="#4336f5", color="#4336f5",
                              tooltip="Project type that determines if the material contains holes or not and if yes,"
                                      " where are they positioned. This is clarified in the spreadsheet of"
                                      " the projects usually")
@@ -137,16 +148,33 @@ def main(page: Page):
     is_straight_checkbox = Checkbox(label="Straight", value=True)
     is_planned_checkbox = Checkbox(label="Planed", value=True)
 
-    image_path_field = TextField(label="Image path", tooltip="Path to where image is stored", width=200, height=40)
+    image_path_field = TextField(label="Image path", tooltip="Path to where image is stored", width=200, height=40,
+                                 border_color="#4336f5", color="#4336f5")
     source_path_field = TextField(label="Source *", tooltip="Source location where the wood was collected", width=200,
-                                  height=40)
-    info_path_field = TextField(width=410, label="Info", multiline=True)
+                                  height=40, border_color="#4336f5", color="#4336f5")
+    info_path_field = TextField(width=410, label="Info", multiline=True, border_color="#4336f5", color="#4336f5")
 
-    fields = [length_text_field, width_text_field, height_text_field, weight_text_field, density_text_field,
-              wood_species_field, label_field,
-              color_text_field, paint_text_field, type_text_field, project_type, is_fire_treated_checkbox,
-              is_straight_checkbox, is_planned_checkbox, image_path_field, source_path_field, info_path_field
-              ]
+    fields = [
+        length_text_field,
+        width_text_field,
+        height_text_field,
+        weight_text_field,
+        density_text_field,
+        wood_species_field,
+        label_field,
+        color_text_field,
+        storage_location_text_field,
+        wood_id_text_field,
+        paint_text_field,
+        type_text_field,
+        project_type,
+        is_fire_treated_checkbox,
+        is_straight_checkbox,
+        is_planned_checkbox,
+        image_path_field,
+        source_path_field,
+        info_path_field
+    ]
 
     def error_msg(e):
         gui.content.page.add(
@@ -184,47 +212,56 @@ def main(page: Page):
             BannerMsg(page, "Successfully saved to DB", 'message', e)
 
     gui = Container(
-        content=Column(controls=[
-            Divider(height=25, color="#FFFFFF"),
-            Card(content=Container(padding=10, content=Column(controls=[
-                Text("ROBOT LAB WOOD DATABASE", size=20, weight=flet.FontWeight.W_500),
-                Text("Contact: j.jooshesh@hva.nl", size=14,
-                     weight=flet.FontWeight.W_200, selectable=True),
-                Text("https://https://robotlab-residualwood.onrender.com/residual_wood", size=14,
-                     weight=flet.FontWeight.W_200, selectable=True),
+        bgcolor="white",
+        content=
+        Column(
+            scroll=ScrollMode.HIDDEN,
+            height=760,
+            controls=[
+                Divider(height=25, color="white"),
+                Card(color="#4336f5", content=Container(padding=10, content=Column(controls=[
+                    Text("DATA ENTRY GUI", size=22, weight=flet.FontWeight.W_900, color="white"),
+                    Text("contact: j.jooshesh@hva.nl", size=14,
+                         weight=flet.FontWeight.W_200, selectable=True, color="white"),
+                    Text("https://https://robotlab-residualwood.onrender.com/residual_wood", size=14,
+                         weight=flet.FontWeight.W_200, selectable=True, color="white"),
 
-                Row(controls=[FilledTonalButton(text="API Documentation", on_click=go_to_api_docs, style=btn_style_1),
-                              FilledTonalButton(text="Repository", on_click=go_to_github_page, style=btn_style_2)]),
+                    Row(controls=[ElevatedButton(text="API Documentation", on_click=go_to_api_docs, bgcolor="white",
+                                                 color="#4336f5"),
+                                  ElevatedButton(text="Repository", on_click=go_to_github_page, bgcolor="white",
+                                                 color="#4336f5")]),
 
-            ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, wrap=True))),
+                ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, wrap=True))),
 
-            Divider(height=25, color="#FFFFFF"),
+                Divider(height=25, color="white"),
 
-            Row(controls=[
-                Column(controls=[length_text_field, width_text_field, height_text_field, weight_text_field]),
-                Column(controls=[density_text_field, wood_species_field, label_field, color_text_field])],
-                alignment=flet.MainAxisAlignment.CENTER),
-            Row(controls=[image_path_field, source_path_field], alignment=flet.MainAxisAlignment.CENTER),
-            Divider(height=25, visible=True),
-            Row(controls=[is_planned_checkbox, is_straight_checkbox, is_fire_treated_checkbox],
-                alignment=flet.MainAxisAlignment.CENTER),
-            Row(controls=[project_type, paint_text_field, type_text_field],
-                alignment=flet.MainAxisAlignment.CENTER),
+                Row(controls=[
+                    Column(controls=[length_text_field, width_text_field, height_text_field, weight_text_field,
+                                     wood_id_text_field]),
+                    Column(controls=[density_text_field, wood_species_field, label_field, color_text_field,
+                                     storage_location_text_field])],
+                    alignment=flet.MainAxisAlignment.CENTER),
+                Row(controls=[image_path_field, source_path_field], alignment=flet.MainAxisAlignment.CENTER),
+                Divider(height=25, visible=True, color="white"),
+                Row(controls=[is_planned_checkbox, is_straight_checkbox, is_fire_treated_checkbox],
+                    alignment=flet.MainAxisAlignment.CENTER),
+                Row(controls=[project_type, paint_text_field, type_text_field],
+                    alignment=flet.MainAxisAlignment.CENTER),
 
-            Divider(height=25, visible=True),
+                Divider(height=25, visible=True, color="white"),
 
-            Row(controls=[info_path_field], alignment=flet.MainAxisAlignment.CENTER),
+                Row(controls=[info_path_field], alignment=flet.MainAxisAlignment.CENTER),
 
-            Divider(height=30, visible=True),
-            Row(controls=[
-                Column(controls=[FilledButton(text="Save", on_click=submit, style=btn_style_3)]),
-                Column(controls=[FilledTonalButton(text="Clear", on_click=cancel, style=btn_style_2)]),
-                Column(controls=[
-                    FilledTonalButton(text="Close", on_click=lambda x: page.window_destroy(), style=btn_style_2)])
-            ], alignment=flet.MainAxisAlignment.CENTER),
-
-        ], alignment=flet.MainAxisAlignment.CENTER, horizontal_alignment=flet.CrossAxisAlignment.CENTER)
-
+                Divider(height=30, visible=True, color="white"),
+                Row(controls=[
+                    Column(
+                        controls=[ElevatedButton(text="Save", on_click=submit, bgcolor="#4336f5", color="white")]),
+                    Column(controls=[ElevatedButton(text="Clear", on_click=cancel, bgcolor="grey", color="white")]),
+                    Column(controls=[
+                        ElevatedButton(text="Close", on_click=lambda x: page.window_destroy(), bgcolor="grey",
+                                       color="white")])
+                ], alignment=flet.MainAxisAlignment.CENTER),
+            ], alignment=flet.MainAxisAlignment.CENTER, horizontal_alignment=flet.CrossAxisAlignment.CENTER)
     )
 
     page.views.append(
