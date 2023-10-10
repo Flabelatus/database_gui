@@ -425,7 +425,7 @@ def main(page: Page):
                 Divider(height=30, visible=True, color="white"),
                 Row(controls=[
                     Column(
-                        controls=action_buttons[:-2]),
+                        controls=action_buttons[:-1]),
                     Column(
                         controls=[action_buttons[-1]]),
                     Column(controls=[ElevatedButton(text="Clear", on_click=cancel, bgcolor="grey", color="white")]),
