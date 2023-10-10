@@ -171,7 +171,7 @@ def main(page: Page):
                     break
 
     def go_to_api_docs(e):
-        webbrowser.open("https://robotlab-residualwood.onrender.com/swagger-ui")
+        webbrowser.open("https://robotlab-residualwood.onrender.com/api-docs")
 
     def go_to_github_page(e):
         webbrowser.open("https://github.com/Flabelatus/CircularWood_4.0_WP1")
