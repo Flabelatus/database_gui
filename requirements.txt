@@ -1,2 +1,5 @@
 flet
 requests
+pillow==10.0.1
+ZPL==0.1.10
+zebra==0.1.0
