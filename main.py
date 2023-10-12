@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 from datetime import datetime
 import json
@@ -11,8 +13,6 @@ from flet import Page, Container, Divider, Image, ElevatedButton
 from flet_core import Card, TextButton, Banner, colors, Icon, icons, ScrollMode
 import webbrowser
 import requests
-
-# imported from the Kilian's wood tagging script
 
 # index is used to print the label
 index_to_print = 0
@@ -37,6 +37,17 @@ values = []
 param = []
 
 
+def resource_path(relative_path):
+    """ Get absolute path to resource"""
+
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 def print_label(d):
     # create label
     label_to_print = zpl.Label(17, 38)  # vertical, horizontal
@@ -44,8 +55,8 @@ def print_label(d):
     # write an image (change 'if False' to 'if True' when you want to actually add it
     image_width = 2
     label_to_print.origin(30, 2)
-    logo = Img.open('logo.png')
-    label_to_print.write_graphic(logo, image_width)
+    # logo = Img.open('C:\\Users\\jjooshe\\Desktop\\from remote\\python\\wood_db_manual_gui\\assets\\logo.png')
+    # label_to_print.write_graphic(logo, image_width)
     label_to_print.endorigin()
 
     label_to_print.origin(3, 8)  # horizontal, vertical
@@ -144,7 +155,7 @@ class BannerMsg:
                                       TextButton(icon_color=colors.BLACK45, icon=icons.CHECK,
                                                  on_click=self.close_banner, scale=1.2)])
         self.show_banner(self.event)
-        time.sleep(2.5)
+        time.sleep(3.5)
         self.close_banner(self.event)
 
     def show_banner(self, event):
@@ -156,7 +167,7 @@ class BannerMsg:
         self.page.update()
 
 
-def handle_post_request():
+def handle_post_request(p, e):
     global index_to_print
     global dictionary
     inserted_data = list(zip(KEYS, values))
@@ -164,11 +175,14 @@ def handle_post_request():
     endpoint = "/residual_wood"
     headers = {"Content-Type": "application/json"}
 
-    for item in inserted_data:
-        if item[0] in ["length", "width", "height", "weight", "density"]:
-            payload[item[0]] = float(item[1])
-        else:
-            payload[item[0]] = item[1]
+    try:
+        for item in inserted_data:
+            if item[0] in ["length", "width", "height", "weight", "density"]:
+                payload[item[0]] = float(item[1])
+            else:
+                payload[item[0]] = item[1]
+    except ValueError:
+        BannerMsg(p, "Please make sure the value types are correct", 'warning', e)
 
     payload["timestamp"] = datetime.strftime(datetime.now(), "%d-%m-%Y %H:%M:%S")
     json_body = json.dumps(payload)
@@ -176,8 +190,8 @@ def handle_post_request():
     response = requests.post(URL + endpoint, data=json_body, timeout=10, headers=headers)
     dictionary = response.json()
     index_to_print = response.json()['id']
-    # print(">>>>>>", json_body)
-    return response.json()
+    # print(">>>>>>", dictionary)
+    return response.json(), response.status_code
 
 
 def handle_delete_request():
@@ -188,7 +202,8 @@ def handle_delete_request():
 
     json_body = json.dumps(payload)
     response = requests.delete(URL + "residual_wood", data=json_body, headers={"Content-Type": "application/json"})
-    return response.json()
+    print(response.status_code)
+    return response.status_code
 
 
 def main(page: Page):
@@ -232,14 +247,16 @@ def main(page: Page):
                 error_status = True
                 break
             values.append(f.value)
+
         if error_status is False:
-            handle_post_request()
-            BannerMsg(page, "Successfully saved to DB", 'message', e)
-            time.sleep(1)
-            for f in fields:
-                if f != wood_id_text_field:
-                    f.value = ""
-            page.update()
+            response = handle_post_request(page, e)
+            if response[1] != 201:
+                if response[1] == 400:
+                    BannerMsg(page, f"Message: {response[0]['message']}", 'error', e)
+                elif response[1] != 400:
+                    BannerMsg(page, "Something went wrong - status code: {}".format(response[1]), 'error', e)
+            else:
+                BannerMsg(page, "Successfully saved to DB", 'message', e)
 
     def delete_row(e):
         err = False
@@ -254,14 +271,14 @@ def main(page: Page):
                 param.append(f.value)
                 break
         if err is False:
-            handle_delete_request()
-            BannerMsg(page, f"Successfully deleted the row with Wood ID: {param[-1]}", 'message', e)
-            time.sleep(1)
-            for f in fields:
-                if f == wood_id_text_field:
-                    f.value = ""
-                    page.update()
-                    break
+            resp = handle_delete_request()
+            if resp != 200:
+                if resp == 404:
+                    BannerMsg(page, "The entered ID does not exist - status code: {}".format(resp), 'error', e)
+                elif resp != 404:
+                    BannerMsg(page, "Something went wrong - status code: {}".format(resp), 'error', e)
+            else:
+                BannerMsg(page, f"Successfully deleted the row with Wood ID: {param[-1]}", 'message', e)
 
     def go_to_api_docs(e):
         webbrowser.open("https://robotlab-residualwood.onrender.com/api-docs")
@@ -276,7 +293,7 @@ def main(page: Page):
     )
 
     length_text_field = TextField(label="Length *", tooltip="Length of the wood in mm", width=200, height=40,
-                                  border_color="#4336f5", color="#4336f5")
+                                  border_color="#4336f5", color="#4336f5", keyboard_type=flet.KeyboardType.NUMBER)
     width_text_field = TextField(label="Width *", tooltip="Width of the wood in mm", width=200, height=40,
                                  border_color="#4336f5", color="#4336f5")
     height_text_field = TextField(label="Height *", tooltip="Height of the wood in mm", width=200, height=40,
@@ -351,7 +368,8 @@ def main(page: Page):
         gui.content.page.add(
             Text("Error")
         )
-        BannerMsg(page, "Please fill in the required fields", "warning", e)
+        BannerMsg(page, "Please fill in the required fields or make sure the entered data is the correct value type",
+                  "warning", e)
 
     def update_tab():
         status = tabs.tabs[tabs.selected_index].text
@@ -388,7 +406,9 @@ def main(page: Page):
             controls=[
                 Divider(height=25, color="white"),
                 Card(color="#4336f5", content=Container(padding=10, content=Column(controls=[
-                    Image(src="assets/RL LOGO WHITE .png", fit=flet.ImageFit.CONTAIN, width=200),
+                    Image(
+                        src="C:\\Users\\jjooshe\\Desktop\\from remote\\python\\wood_db_manual_gui\\assets\\RL LOGO WHITE .png",
+                        fit=flet.ImageFit.CONTAIN, width=200),
                     Text("DATA ENTRY GUI", size=22, weight=flet.FontWeight.W_900, color="white"),
                     Text("contact: j.jooshesh@hva.nl", size=14,
                          weight=flet.FontWeight.W_200, selectable=True, color="white"),
