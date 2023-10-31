@@ -30,7 +30,7 @@ dictionary = {}
 
 URL = "https://robotlab-residualwood.onrender.com/"
 URL_DEV = "http://localhost:5000/"
-KEYS = ["length", "width", "height", "weight", "density", "wood_species", "label", "color", "storage_location",
+KEYS = ["length", "width", "height", "weight", "wood_species", "label", "color", "storage_location",
         "wood_id", "paint", "type",
         "project_type", "is_fire_treated", "is_straight", "is_planed", "image", "source", "info"]
 values = []
@@ -187,11 +187,11 @@ def handle_post_request(p, e):
     payload["timestamp"] = datetime.strftime(datetime.now(), "%d-%m-%Y %H:%M:%S")
     json_body = json.dumps(payload)
 
-    response = requests.post(URL + endpoint, data=json_body, timeout=10, headers=headers)
-    dictionary = response.json()
-    index_to_print = response.json()['id']
-    # print(">>>>>>", dictionary)
-    return response.json(), response.status_code
+    # response = requests.post(URL + endpoint, data=json_body, timeout=10, headers=headers)
+    # dictionary = response.json()
+    # index_to_print = response.json()['id']
+    print(">>>>>>", json_body)
+    # return response.json(), response.status_code
 
 
 def handle_delete_request():
@@ -215,6 +215,8 @@ def main(page: Page):
     page.theme = flet.Theme(visual_density=flet.ThemeVisualDensity.COMFORTABLE, use_material3=True,
                             color_scheme_seed="#4336f5")
 
+    tab_status = "Insert Row"
+
     def __print_label__(e):
         global index_to_print
         if index_to_print == 0:
@@ -233,7 +235,9 @@ def main(page: Page):
         error_status = False
         if len(values) > 0:
             values.clear()
-        for f in fields:
+        for f in widgets:
+            if type(f) == flet.Card:
+                continue
             if (
                     f.label == "Length *" and f.value == "" or
                     f.label == "Width *" and f.value == "" or
@@ -249,20 +253,21 @@ def main(page: Page):
             values.append(f.value)
 
         if error_status is False:
-            response = handle_post_request(page, e)
-            if response[1] != 201:
-                if response[1] == 400:
-                    BannerMsg(page, f"Message: {response[0]['message']}", 'error', e)
-                elif response[1] != 400:
-                    BannerMsg(page, "Something went wrong - status code: {}".format(response[1]), 'error', e)
-            else:
-                BannerMsg(page, "Successfully saved to DB", 'message', e)
+            handle_post_request(page, e)
+            # response = handle_post_request(page, e)
+            # if response[1] != 201:
+            #     if response[1] == 400:
+            #         BannerMsg(page, f"Message: {response[0]['message']}", 'error', e)
+            #     elif response[1] != 400:
+            #         BannerMsg(page, "Something went wrong - status code: {}".format(response[1]), 'error', e)
+            # else:
+            #     BannerMsg(page, "Successfully saved to DB", 'message', e)
 
     def delete_row(e):
         err = False
         if len(param) > 0:
             param.clear()
-        for f in fields:
+        for f in widgets:
             if f.label == "Wood ID *" and f.value == "":
                 error_msg(e)
                 err = True
@@ -301,11 +306,11 @@ def main(page: Page):
 
     weight_text_field = TextField(label="Weight *", tooltip="Weight of the wood in kg", width=200, height=40,
                                   border_color="#4336f5", color="#4336f5")
-    density_text_field = TextField(label="Density *", tooltip="Density of the wood mm3/kg", width=200, height=40,
-                                   border_color="#4336f5", color="#4336f5")
+
     wood_species_field = TextField(label="Species", tooltip="Species and process of the wood e.g. Red Oak FSC ",
                                    width=200, height=40, border_color="#4336f5", color="#4336f5")
-    label_field = TextField(label="Label", tooltip="Label of the material from specific project", width=200, height=40,
+    label_field = TextField(label="Source location", tooltip="Label of the material from specific project", width=200,
+                            height=40,
                             border_color="#4336f5", color="#4336f5")
     color_text_field = TextField(label="Color *", tooltip="Color of the wood in (RGB) e.g. '120, 130, 90'", width=200,
                                  height=40, border_color="#4336f5", color="#4336f5")
@@ -315,16 +320,17 @@ def main(page: Page):
     wood_id_text_field = TextField(label="Wood ID *",
                                    tooltip="ID of the wood e.g. in the 7 digits format of '00000001'",
                                    width=200, height=40, border_color="#4336f5", color="#4336f5")
-    paint_text_field = TextField(label="RAL number", width=120, height=40, tooltip="The RAL number of the"
-                                                                                   " wood if it is painted",
-                                 border_color="#4336f5", color="#4336f5")
-    type_text_field = TextField(label="Wood type", width=120, height=40, tooltip="Wood type e.g. hardwood or softwood",
+    paint_text_field = TextField(label="Paint color", width=120, height=40, tooltip="The RAL number of the"
+                                                                                    " wood if it is painted",
+                                 border_color="#83613F", color="#83613F", bgcolor="FFE5CC")
+    type_text_field = TextField(label="Wood type", width=200, height=40, tooltip="Wood type e.g. hardwood or softwood",
                                 border_color="#4336f5", color="#4336f5")
 
-    project_type = TextField(label="Project type", width=120, height=40, border_color="#4336f5", color="#4336f5",
-                             tooltip="Project type that determines if the material contains holes or not and if yes,"
-                                     " where are they positioned. This is clarified in the spreadsheet of"
-                                     " the projects usually")
+    project_type = TextField(label="Project type", width=120, height=40, border_color="#83613F", color="#83613F",
+                             bgcolor='FFE5CC',
+                             tooltip="Project specific information considered for Derako BV."
+                                     " This is clarified in the spreadsheet of"
+                                     " the projects usually. If you do not know what it is, leave it blank")
 
     is_fire_treated_checkbox = Checkbox(label="Fire treated")
     is_straight_checkbox = Checkbox(label="Straight", value=True)
@@ -332,22 +338,47 @@ def main(page: Page):
 
     image_path_field = TextField(label="Image path", tooltip="Path to where image is stored", width=412, height=40,
                                  border_color="#4336f5", color="#4336f5")
-    source_path_field = TextField(label="Source *", tooltip="Source location where the wood was collected", width=200,
+    source_path_field = TextField(label="Intake location *", tooltip="Location where the wood was in-taken", width=200,
                                   height=40, border_color="#4336f5", color="#4336f5")
     info_path_field = TextField(width=410, label="Info", multiline=True, border_color="#4336f5", color="#4336f5")
 
     insert_btn = ElevatedButton(text="Insert", on_click=submit, bgcolor="#4336f5", color="white")
     delete_btn = ElevatedButton(text="Delete", on_click=delete_row, bgcolor="#4336f5", color="white")
-    print_label_btn = ElevatedButton(text="Print Label", on_click=__print_label__, bgcolor="#4336f5", color="white")
+    print_label_btn = ElevatedButton(text="Print Label", on_click=__print_label__, bgcolor="#9891F6", color="white")
 
     action_buttons = [insert_btn, delete_btn, print_label_btn]
 
-    fields = [
+    card_widget = Card(
+        width=400,
+        color="#C6905A",
+        content=Container(
+            padding=20,
+            content=Column(
+                horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+                alignment=flet.MainAxisAlignment.CENTER,
+                controls=[
+                    Text("Data Related to Wood from Derako BV", size=18,
+                         weight=flet.FontWeight.W_500,
+                         color=colors.WHITE,
+                         text_align=flet.TextAlign.CENTER),
+                    Text("This fields are used only for the wood that is delivered by Derako BV", size=14,
+                         weight=flet.FontWeight.W_200,
+                         color=colors.WHITE,
+                         text_align=flet.TextAlign.CENTER),
+                    Divider(height=10, visible=True, color="#C6905A"),
+                    Row(controls=[project_type, paint_text_field],
+                        alignment=flet.MainAxisAlignment.CENTER),
+                ]
+            )
+        )
+    )
+
+    widgets = [
         length_text_field,
         width_text_field,
         height_text_field,
         weight_text_field,
-        density_text_field,
+        # density_text_field,
         wood_species_field,
         label_field,
         color_text_field,
@@ -361,7 +392,8 @@ def main(page: Page):
         is_planned_checkbox,
         image_path_field,
         source_path_field,
-        info_path_field
+        info_path_field,
+        card_widget
     ]
 
     def error_msg(e):
@@ -372,28 +404,29 @@ def main(page: Page):
                   "warning", e)
 
     def update_tab():
-        status = tabs.tabs[tabs.selected_index].text
-        for f in fields:
+        nonlocal tab_status
+        tab_status = tabs.tabs[tabs.selected_index].text
+        for f in widgets:
             if f != wood_id_text_field:
                 f.visible = (
-                        status == "Insert Row"
+                        tab_status == "Insert Row"
                 )
             page.update()
 
         for b in action_buttons:
             if b == insert_btn or b == print_label_btn:
-                b.visible = status == "Insert Row"
+                b.visible = tab_status == "Insert Row"
             else:
-                b.visible = status == "Delete Row"
+                b.visible = tab_status == "Delete Row"
             page.update()
 
-        for f in fields:
+        for f in widgets:
             if f == wood_id_text_field:
-                f.visible = status == "Delete Row"
+                f.visible = tab_status == "Delete Row"
                 page.update()
 
     def cancel(e):
-        for f in fields:
+        for f in widgets:
             f.value = None
         page.update()
 
@@ -407,7 +440,8 @@ def main(page: Page):
                 Divider(height=25, color="white"),
                 Card(color="#4336f5", content=Container(padding=10, content=Column(controls=[
                     Image(
-                        src="C:\\Users\\jjooshe\\Desktop\\from remote\\python\\wood_db_manual_gui\\assets\\RL LOGO WHITE .png",
+                        src="C:\\Users\\jjooshe\\Desktop\\from remote\\python\\wood_db_manual_gui\\"
+                            "assets\\RL LOGO WHITE .png",
                         fit=flet.ImageFit.CONTAIN, width=200),
                     Text("DATA ENTRY GUI", size=22, weight=flet.FontWeight.W_900, color="white"),
                     Text("contact: j.jooshesh@hva.nl", size=14,
@@ -428,19 +462,25 @@ def main(page: Page):
                 Row(controls=[
                     Column(controls=[length_text_field, width_text_field, height_text_field, weight_text_field,
                                      wood_id_text_field, source_path_field]),
-                    Column(controls=[density_text_field, wood_species_field, label_field, color_text_field,
-                                     storage_location_text_field])],
+                    Column(controls=[wood_species_field, label_field, color_text_field,
+                                     storage_location_text_field, type_text_field])],
                     alignment=flet.MainAxisAlignment.CENTER),
                 Row(controls=[image_path_field], alignment=flet.MainAxisAlignment.CENTER),
-                Divider(height=25, visible=True, color="white"),
+                Divider(height=10, visible=True, color="white"),
                 Row(controls=[is_planned_checkbox, is_straight_checkbox, is_fire_treated_checkbox],
                     alignment=flet.MainAxisAlignment.CENTER),
-                Row(controls=[project_type, paint_text_field, type_text_field],
-                    alignment=flet.MainAxisAlignment.CENTER),
-
-                Divider(height=25, visible=True, color="white"),
-
+                Divider(height=10, visible=True, color="white"),
                 Row(controls=[info_path_field], alignment=flet.MainAxisAlignment.CENTER),
+                Divider(height=10, visible=True, color="white"),
+
+                card_widget,
+
+                # Row(controls=[project_type, paint_text_field],
+                #     alignment=flet.MainAxisAlignment.CENTER),
+
+                # Divider(height=25, visible=True, color="white"),
+
+                # Row(controls=[info_path_field], alignment=flet.MainAxisAlignment.CENTER),
 
                 Divider(height=30, visible=True, color="white"),
                 Row(controls=[
@@ -462,4 +502,5 @@ def main(page: Page):
     update_tab()
 
 
-flet.app(target=main)
+flet.app(target=main, view=flet.WEB_BROWSER)
+
