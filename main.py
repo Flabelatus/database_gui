@@ -11,7 +11,7 @@ import requests
 
 index_to_print = 0
 dictionary = {}
-a
+
 URL = "https://robotlab-residualwood.onrender.com/"
 URL_DEV = "http://localhost:5000/"
 KEYS = ["length", "width", "height", "weight", "name", "source", "color", "storage_location", "paint", "type",
